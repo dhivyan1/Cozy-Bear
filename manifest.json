@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Cozy Bear AI",
+  "version": "1.0",
+  "description": "Your AI cybersecurity assistant in a Chrome extension.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": [
+  "https://api.mistral.ai/*",
+  "https://otx.alienvault.com/*"
+]
+}

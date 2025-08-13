@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cozy Bear Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+    #chat-container {
+      width: 80%;
+      max-width: 1200px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 15px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+    }
+    #messages {
+      flex: 1;
+      min-height: 400px;
+      max-height: 600px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: #f9f9f9;
+    }
+    .message {
+      margin-bottom: 10px;
+      padding: 10px 15px;
+      border-radius: 10px;
+      word-wrap: break-word;
+    }
+    .user { background-color: #d1e7ff; text-align: right; }
+    .bot { background-color: #e2ffd9; text-align: left; }
+    #user-input { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    #send-btn, #upload-btn { margin-top: 5px; padding: 10px; border: none; border-radius: 5px; cursor: pointer; }
+    #send-btn { background: #007bff; color: white; width: 100%; }
+    #send-btn:hover { background: #0056b3; }
+    #upload-btn { background: #28a745; color: white; width: 100%; }
+    #upload-btn:hover { background: #1e7e34; }
+  </style>
+</head>
+<body>
+  <div id="chat-container">
+    <div id="messages"></div>
+    <input type="text" id="user-input" placeholder="Type your message here..."/>
+    <button id="send-btn">Send</button>
+    <input type="file" id="file-input" style="margin-top:5px;"/>
+    <button id="upload-btn">Upload & Scan File</button>
+  </div>
+
+  <script>
+    const messagesDiv = document.getElementById('messages');
+    const inputBox = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const fileInput = document.getElementById('file-input');
+    const uploadBtn = document.getElementById('upload-btn');
+    const userId = 'user1';
+
+    function appendMessage(text, sender){
+      const div = document.createElement('div');
+      div.classList.add('message', sender);
+      div.textContent = text;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    async function sendMessage(){
+      const message = inputBox.value.trim();
+      if(!message) return;
+      appendMessage(message,'user');
+      inputBox.value = '';
+
+      try{
+        const response = await fetch('/api/chat',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({userId, message})
+        });
+        const data = await response.json();
+        appendMessage(data.reply || 'No reply from Cozy Bear','bot');
+      }catch(err){
+        appendMessage('Error contacting Cozy Bear','bot');
+        console.error(err);
+      }
+    }
+
+    async function uploadFile(){
+      const file = fileInput.files[0];
+      if(!file){ alert('Select a file first'); return; }
+      appendMessage(`Uploading file: ${file.name}`,'user');
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', userId);
+
+      try{
+        const response = await fetch('/api/upload',{
+          method:'POST',
+          body: formData
+        });
+        const data = await response.json();
+        appendMessage(data.reply || 'No reply from Cozy Bear','bot');
+      }catch(err){
+        appendMessage('Error uploading file','bot');
+        console.error(err);
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    inputBox.addEventListener('keydown',(e)=>{ if(e.key==='Enter') sendMessage(); });
+    uploadBtn.addEventListener('click', uploadFile);
+  </script>
+</body>
+</html>
